@@ -4,7 +4,7 @@ Write-Host("| |  | | _   _  ___ | |_  _  _ __  ") -f white
 Write-Host("| |  | || | | |/ __|| __|| || '_ \ ") -f white 
 Write-Host("| |__| || |_| |\__ \| |_ | || | | |") -f white
 Write-Host("|_____/  \__,_||___/ \__||_||_| |_|") -f white
-Write-Host("BucketSize v2.2 by RUNE GOKS0R 2026") -f yellow
+Write-Host("BucketSize v2.3 by RUNE GOKS0R 2026") -f yellow
 Write-Host("(calculates S3 buckets consumption)") -f yellow
 Write-Host("")
 
@@ -37,7 +37,7 @@ If ($url -eq $null) {
 		Write-host "You may specify bucket option for singel bucket scan like this example:"  -f yellow -nonewline
 		Write-host ".\bucketsize.ps1 https://dk-east.s3.dustin.com mybucket"  -f darkyellow
 	}
-	Write-host "Scanning S3 address: $url"  -f white -nonewline
+	Write-host "Scanning S3 address: "  -f white -nonewline
 	Write-host $url -f cyan
 }
 
@@ -152,10 +152,8 @@ function Repair-XmlString {
         [ValidateNotNullOrEmpty()]
         [string]$String
     )
-    #Write-Host "Cleaning string for XML parsing [String: $($String)]"
     $rPattern = "[^\x09\x0A\x0D\x20-\xD7FF\xE000-\xFFFD\x10000\x10FFFF]"
     $cleaned = $String -replace $rPattern, ''
-    #Write-Host "Returning parsed string [String cleaned: $($cleaned)]"
     return $cleaned
 }
 
@@ -221,9 +219,6 @@ foreach ($bucket in $buckets) {
 	$averagesize=0
 	$watch.Start()
 
-	###### OLD Bucket Read loop ######
-	# $Measurement = Get-S3ObjectV2 $bucket.Bucketname -EndpointUrl $url | Measure-Object -Sum -Average -Property Size
-
 	###### NEW Bucket Read loop ######
 		# First batch to establish baseline
 		Write-Host("Total (Si) <") -f yellow -nonewline
@@ -233,11 +228,15 @@ foreach ($bucket in $buckets) {
 			$marker = $batch[999].Key
 			$batchsize = $batch | Measure-Object -Sum -Property Size
 			$busize = $busize + $batchsize.Sum
-			# Write-Host ("■ ") -f White -nonewline
 			if ($currentcolor -eq "Green") { $currentcolor = "Blue" } else { $currentcolor = "Green" }
 			Write-Host ("  ") -nonewline
 			Write-Host (Get-FriendlySize($busize)) -f $currentcolor -nonewline
-			Write-Host ("   ") -nonewline
+			if ($currentcolor -eq "Green") { $currentcolor = "Blue" } else { $currentcolor = "Green" }
+			Write-Host ("/") -f $currentcolor -nonewline
+			Write-Host($watch.Elapsed.Hours) -f $currentcolor -nonewline
+			Write-Host ("h            ") -nonewline -f DarkGray
+			Write-Host($watch.Elapsed.Minutes) -f $currentcolor -nonewline
+			Write-Host ("m            ") -nonewline -f DarkGray
 			$host.UI.RawUI.set_cursorPosition($Pos)
 
 			# Iterate from 1000 files to the end
@@ -253,11 +252,16 @@ foreach ($bucket in $buckets) {
 						Write-Host ("         | Total (Si) <") -f white -nonewline
 						$pos = $host.ui.RawUI.get_cursorPosition()
 					}
-				# Write-Host ("■ ") -f White -nonewline
 				if ($currentcolor -eq "Green") { $currentcolor = "Blue" } else { $currentcolor = "Green" }
 				Write-Host ("  ") -nonewline
 				Write-Host (Get-FriendlySize($busize)) -f $currentcolor -nonewline
-				Write-Host ("        ") -nonewline
+
+				if ($currentcolor -eq "Green") { $currentcolor = "Blue" } else { $currentcolor = "Green" }
+				Write-Host ("/") -f $currentcolor -nonewline
+				Write-Host($watch.Elapsed.Hours) -f $currentcolor -nonewline
+				Write-Host ("h            ") -nonewline -f DarkGray
+				Write-Host($watch.Elapsed.Minutes) -f $currentcolor -nonewline
+				Write-Host ("m            ") -nonewline -f DarkGray
 				$host.UI.RawUI.set_cursorPosition($Pos)
 				}	
 		###### Calculate Average and Item-count for Bucket #####
@@ -281,18 +285,10 @@ foreach ($bucket in $buckets) {
 	Write-Host(Get-FriendlySize($busize)) -f DarkYellow -nonewline 
 	Write-Host("      ")
 	
-	#Write-Host("         | ") -f white -nonewline
-	#Write-Host("Total TiB   : ") -f yellow -nonewline	
-	#$si = Convert-DataSizeUnitOfMeasure -From Byte -Value $busize -To TiB -Precision 1
-	#Write-Host($si.value,$si.unit) -f DarkYellow
-	
 	Write-Host("         | ") -f white -nonewline
 	Write-Host("Total TB    : ") -f yellow -nonewline	
 	$si = Convert-DataSizeUnitOfMeasure -From Byte -Value $busize -To TB -Precision 1
 	Write-Host($si.value,$si.unit) -f Green
-	
-	#If ($busize -lt 1024) {Convert-DataSizeUnitOfMeasure -From Byte -Value $totsize -To KiB -Precision 0;Write-Host " KiB"}
-	#If ($busize -ge 1024) {Convert-DataSizeUnitOfMeasure -From Byte -Value $totsize -To MiB -Precision 0;Write-Host " MiB"}
 	
 	# Write-Host(Get-FriendlySize($busize)) -f DarkYellow
 	Write-Host("         | ") -f white -nonewline
@@ -332,7 +328,6 @@ $totaveragesize = [Math]::Round($totaveragesize,0,[MidPointRounding]::AwayFromZe
 ###### Print total for account ######
 If ($bu -eq $null) {
 	$tots = Convert-DataSizeUnitOfMeasure -From Byte -Value $totsize -To TiB -Precision 1
-	#Write-Host("Total Account Size in bytes: ") -f yellow -nonewline;Write-Host($totsize) -f Green
 	$totgib = Convert-DataSizeUnitOfMeasure -From Byte -Value $totsize -To TB -Precision 1
 	$totgibtxt = $totgib.value,$totgib.unit
 	$tota = Get-FriendlySize($totaveragesize)
@@ -348,17 +343,11 @@ If ($bu -eq $null) {
 	If ($totscanH -lt 0) {$totscanH = 0}
 		
 	Write-Host("`n")
-	#Write-Host("         .") -f white -nonewline
-	#$len = "$tots.value".Length + "$tots.unit".Length - 27;for ($char =1; $char -le $len; $char++) { Write-Host("=") -f white -nonewline }
-	#Write-Host("=.") -f white
-	
 	Write-Host("]-------<| ") -f white -nonewline
 
 	Write-Host("Total Account (Si): ") -f yellow -nonewline
 	Write-Host($tots.value,$tots.unit) -f DarkYellow -nonewline
-	#for ($char =1; $char -le $len; $char++) { Write-Host(" ") -f white -nonewline }
 
-	#Write-Host("   |") -f white
 	Write-Host("`n]-------<| ") -f white -nonewline
 
 	Write-Host("Total Account TB  : ") -f yellow -nonewline
@@ -367,14 +356,12 @@ If ($bu -eq $null) {
 	$lengib2 = ($totgib.unit | Measure-Object -Character).Characters
 	$lengib = 10 - $lengib1 - $lengib2 ;for ($char =1; $char -le $lengib; $char++) { Write-Host(" ") -f white -nonewline }
 
-	#Write-Host(" |") -f white
 	Write-Host("`n]-------<| ") -f white -nonewline
 
 	Write-Host("Total Files Count : ") -f yellow -nonewline
 	Write-Host($totfilescount) -f DarkYellow -nonewline
 	$lencount = 11 - "$totfilescount".Length;for ($char =1; $char -le $lencount; $char++) { Write-Host(" ") -f white -nonewline }
 
-	#Write-Host(" |") -f white
 	Write-Host("`n]-------<| ") -f white -nonewline
 
 	Write-Host("Total Scan Time   : ") -f yellow -nonewline
@@ -382,28 +369,31 @@ If ($bu -eq $null) {
 	Write-Host("h") -f DarkYellow -nonewline
 	Write-Host($totscanM) -f DarkYellow -nonewline
 	Write-Host("m") -f DarkYellow -nonewline
-	#$lenscan = 9 - "$totscanH".Length - "$totscanM".Length;for ($char =1; $char -le $lenscan; $char++) { Write-Host(" ") -f white -nonewline }
-	#Write-Host(" |") -f white
-	
+
 	Write-Host("`n]-------<| ") -f white -nonewline
 	Write-Host("Total Average Size: ") -f yellow -nonewline
 	Write-Host($tota) -f DarkYellow -nonewline
-	#$lenavg = 11 - "$tota".Length;for ($char =1; $char -le $lenavg; $char++) { Write-Host(" ") -f white -nonewline }
-	#Write-Host(" |") -f white
-	
-	#Write-Host("         '") -f white -nonewline
-	#for ($char =0; $char -le $len; $char++) { Write-Host("=") -f white -nonewline }
-	#Write-Host("'") -f white
 	
 	Write-Host("`n")
-	# if (Test-Path '.\buckets.xlsx') { Remove-Item '.\buckets.xlsx' }
+
 	###### Export to CSV ######
 	Write-Host("Exporting size-table to: ") -f yellow -nonewline
 	$TimeMarker = Get-Date -Format "ddMMyyyy_HHmm"
 	$buckets | Export-CSV -Path .\buckets-$TimeMarker.csv
 	Write-Host(".\buckets-$TimeMarker.csv") -f DarkYellow
+
 	###### Export to Excel ######
 	$buckets | Where BucketName | Export-Excel -Path .\buckets-$TimeMarker.xlsx -WorksheetName Buckets -ChartType PieExploded3D -IncludePivotChart -IncludePivotTable -PivotRows BucketName -PivotData @{SizeGB='sum'}
 	Write-Host("                         .\buckets-$TimeMarker.xlsx") -f DarkYellow
 	Write-Host("")
 }
+
+#############################################################################################################################################################
+#
+#	Changes last few versions
+#
+#	Version 2.3
+#	- Made alternating colors and time when scanning files to indicate that the script hasn't crashed when numbers are surpassing TB-level.
+#
+#	Version 2.1
+#	- Changed default S3 address to work against new clusters, but you may set your own of course.
