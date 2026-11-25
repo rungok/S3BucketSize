@@ -233,10 +233,8 @@ foreach ($bucket in $buckets) {
 			Write-Host (Get-FriendlySize($busize)) -f $currentcolor -nonewline
 			if ($currentcolor -eq "Green") { $currentcolor = "Blue" } else { $currentcolor = "Green" }
 			Write-Host ("/") -f $currentcolor -nonewline
-			Write-Host($watch.Elapsed.Hours) -f $currentcolor -nonewline
-			Write-Host ("h            ") -nonewline -f DarkGray
-			Write-Host($watch.Elapsed.Minutes) -f $currentcolor -nonewline
-			Write-Host ("m            ") -nonewline -f DarkGray
+			Write-Host($watch.Elapsed.Hours) -f $currentcolor -nonewline;Write-Host ("h") -nonewline -f DarkGray
+			Write-Host($watch.Elapsed.Minutes) -f $currentcolor -nonewline;Write-Host ("m            ") -nonewline -f DarkGray
 			$host.UI.RawUI.set_cursorPosition($Pos)
 
 			# Iterate from 1000 files to the end
@@ -258,10 +256,8 @@ foreach ($bucket in $buckets) {
 
 				if ($currentcolor -eq "Green") { $currentcolor = "Blue" } else { $currentcolor = "Green" }
 				Write-Host ("/") -f $currentcolor -nonewline
-				Write-Host($watch.Elapsed.Hours) -f $currentcolor -nonewline
-				Write-Host ("h            ") -nonewline -f DarkGray
-				Write-Host($watch.Elapsed.Minutes) -f $currentcolor -nonewline
-				Write-Host ("m            ") -nonewline -f DarkGray
+				Write-Host($watch.Elapsed.Hours) -f $currentcolor -nonewline;Write-Host ("h") -nonewline -f DarkGray
+				Write-Host($watch.Elapsed.Minutes) -f $currentcolor -nonewline;Write-Host ("m            ") -nonewline -f DarkGray
 				$host.UI.RawUI.set_cursorPosition($Pos)
 				}	
 		###### Calculate Average and Item-count for Bucket #####
@@ -392,8 +388,9 @@ If ($bu -eq $null) {
 #
 #	Changes last few versions
 #
-#	Version 2.3
-#	- Made alternating colors and time when scanning files to indicate that the script hasn't crashed when numbers are surpassing TB-level.
+#	Version 2.2
+#	- Made alternating colors when scanning files to indicate that the script hasn't crashed when numbers are surpassing TB-level, as scan might be very slow depending on the metadata platform
+#     on the target S3-cluster
 #
 #	Version 2.1
 #	- Changed default S3 address to work against new clusters, but you may set your own of course.
